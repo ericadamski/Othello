@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Othello JS</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <!--link href="vendor/twitter-bootstrap/css/bootstrap.min.css" rel="stylesheet"-->
+    <!--link href="vendor/twitter-bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet"-->
+    <link href="src/app.css" rel="stylesheet">
+  </head>
+  <body>
+    <div id="main" class="container">
+      <div id="game-board"></div>
+      <div id="current-player">Current player: <span id="current-player-name">-</span></div>
+      <div id="message"></div>
+      <div id="console"></div>
+      <div id="stats"></div>
+      <div id="preference-pane">
+        <div id="player-type-forms">
+          <label>
+            Black:
+            <select id="black-player-type">
+              <option value="human" selected>Human</option>
+            </select>
+          </label>
+          <label>
+            White:
+            <select id="white-player-type">
+              <option value="human">Human</option>
+            </select>
+          </label>
+        </div>
+        <button id="swap-player-types-button" class="btn" type="button">⇅</button>
+        <button id="start-button" class="btn btn-primary" type="submit">New Game</button>
+      </div>
+    </div>
+    <script src="src/app.js"></script>
+  </body>
+</html>
