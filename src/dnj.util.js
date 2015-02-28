@@ -1,0 +1,30 @@
+// return array of length n with all elements initialized to e
+// from Crockford, JavaScript: The Good Parts
+Array.dim = function (n, e) {
+	var a = [], i;
+	for (i = 0; i < n; i += 1) {
+		a[i] = e;
+	}
+	return a;
+}
+
+Array.range = function (start, end) {
+	var a = [], i;
+	for (i = start; i < end; i += 1) {
+		a[i] = i;
+	}
+	return a;
+}
+
+Array.prototype.contains = function (obj) {
+	return this.indexOf(obj) >= 0;
+}
+
+Array.prototype.copy = function () {
+	return this.slice(0);
+}
+
+
+Array.prototype.isEmpty = function () {
+	return (this.length === 0);
+}

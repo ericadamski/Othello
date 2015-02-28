@@ -3,5 +3,5 @@
 
 > In Development
 
-Basic UI Code taken from : [@kana](https://github.com/kana/othello-js)!
+Basic UI Code taken from : [@JDub20](https://github.com/JDub20/othello)!
 Thank you :thumbsup:
