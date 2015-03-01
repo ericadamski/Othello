@@ -13,7 +13,20 @@ Game = {
 	board: null,
 
   getGameMode : function() {
+    //player-1-mode
+    var p1Index = document.getElementById("player-1-mode").selectedIndex;
+    //player-2-mode
+    var p2Index = document.getElementById("player-2-mode").selectedIndex;
 
+    if ( p1Index === 0 )
+      console.log("Human");
+    else
+      this.board.getPlayer(0).isAI = true;
+
+    if ( p2Index === 0 )
+      console.log("Human");
+    else
+      this.board.getPlayer(1).isAI = true;
   },
 
   updateGuessLocations : function() {
@@ -56,7 +69,7 @@ Game = {
   start : function() {
     Game.boardDimension = 8;
     Game.elements = [];
-    Game.board = new Board(Game.boardDimension);
+    Game.board = Board.init(Game.boardDimension);
 
     for (var row = 0; row < Game.boardDimension; row++) {
     	Game.elements.push(Array.dim(Game.boardDimension).map(function () {
@@ -109,26 +122,56 @@ Game = {
 
     Game.updateGuessLocations();
 
+    Game.getGameMode();
+    // if both are AI, then start playing the game.
+    // if one if AI, the get the click function and the other is AI.
+
     Game.elements.forEach(function(cells, row, elements) {
       cells.forEach(function(cell, col) {
         cell.click(function() {
           var coordinate = new Coordinate(row,col);
+
+          var currentPlayer = Game.board.getCurrentPlayer();
+
           if (Game.getElementAt(coordinate).hasClass("guess")) {
-            var move = Game.board.play(coordinate);
+            var move = currentPlayer.play(coordinate);
+
             Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
-            Game.updateTurnLabel(Game.board.getCurrentPlayer());
+            Game.updateTurnLabel(currentPlayer);
             Game.updateScoreLabel();
             Game.updateGuessLocations();
+
             if (Game.board.isGameOver()) {
               Game.gameOver();
               return;
             }
           }
-            /////////// TODO: Put in AI stuff herehrehr::::////
+
+          if ( (currentPlayer = Game.board.getCurrentPlayer()).isAI )
+          {
+            var move = currentPlayer.play(Game.board);
+
+            Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
+            Game.updateTurnLabel(currentPlayer)
+            Game.updateScoreLabel();
+            Game.updateGuessLocations();
+          }
         });
       });
     });
-    Game.gameOver();
+
+
+    var player;
+
+    if ( (player = Game.board.getCurrentPlayer()).isAI )
+    {
+      var move = player.play(Game.board);
+
+      Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
+      Game.updateTurnLabel(currentPlayer)
+      Game.updateScoreLabel();
+      Game.updateGuessLocations();
+    }
   },
 
   getElementAt : function (coordinate) {
@@ -143,22 +186,24 @@ Game = {
   },
 
   gameOver : function () {
-      //var winner = Game.board.getWinner();
+    if (Game.board !== null )
+    {
+      var winner = Game.board.getWinner();
       var outcome = $("#outcome");
-      //outcome.html("Winner: " + winner.toString());
+      outcome.html("Winner: " + winner.toString());
+      this.updateTurnLabel(winner);
+    }
 
-      var reset = document.createElement('button');
-      reset.id = 'restart-button';
-      reset.name = 'Restart';
-      reset.innerHTML = 'Restart';
-      reset.class = '.btn';
-      reset.onclick = Game.reset;
+    var reset = document.createElement('button');
+    reset.id = 'restart-button';
+    reset.name = 'Restart';
+    reset.innerHTML = 'Restart';
+    reset.class = '.btn';
+    reset.onclick = Game.reset;
 
-      var out = document.getElementById('outcome');
-      out.appendChild(document.createElement('br'));
-      out.appendChild(reset);
-
-      //this.updateTurnLabel(winner);
+    var out = document.getElementById('outcome');
+    out.appendChild(document.createElement('br'));
+    out.appendChild(reset);
   },
 
   reset : function() {
@@ -169,4 +214,4 @@ Game = {
 
 };
 
-$(document).ready(Game.start);
+$(document).ready(Game.gameOver);

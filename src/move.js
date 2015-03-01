@@ -43,8 +43,8 @@ var Move = function (player, newDisk, flipGenerator) {
 };
 
 //a flip is meant to represent the line flipped
-//it is defined by the newDisk coordinate, the 
-//direction of the flip, and the anchor, which 
+//it is defined by the newDisk coordinate, the
+//direction of the flip, and the anchor, which
 //is the end opposite where the new piece was placed
 
 var Flip = function (direction, newDisk, flippedDisks, anchor) {

@@ -11,6 +11,7 @@
 		<script src="src/move.js"></script>
 		<script src="src/coordinate.js"></script>
 		<script src="src/board.js"></script>
+		<script src="src/ai.js"></script>
 	</head>
 	<body>
 		<h1 id="gameName">Othello</h1>
@@ -19,14 +20,14 @@
 				<span id='turn-label'>Turn :</span>
 				<div id="turn"></div>
 				Player 1 :
-        <select name="player-1-mode">
+        <select id="player-1-mode">
 					<option>Human</option>
 					<option>Computer w/ Heuristic 1</option>
 					<option>Computer w/ Heuristic 2</option>
 				</select>
 				<br>
 				Player 2 :
-        <select name="player-2-mode">
+        <select id="player-2-mode">
 					<option>Human</option>
 					<option>Computer w/ Heuristic 1</option>
 					<option>Computer w/ Heuristic 2</option>
