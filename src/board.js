@@ -2,136 +2,175 @@
 // Implementation of the Board ADT
 // Contains all the game logic
 //
-Board = {
-	PLAYER_1: {},
-	PLAYER_2: {},
-	NONE: {},
-	compass: null,
-	moveStack: [],
-	board: [],
-	currentPlayerId: 0,
-	boardDimension: 0,
+var Board = function (boardDimension) {
+	var that = this;
 
-	init : function (boardDimension) {
-		this.boardDimension = boardDimension;
+  var PLAYER_1 = {}, PLAYER_2 = {}, NONE = {};
+  PLAYER_1.other = PLAYER_2;
+  PLAYER_1.score = 2;
+  PLAYER_1.scoreLabelId = "player-1-score"
+	PLAYER_1.isAI = false;
 
-  	this.PLAYER_1.other = this.PLAYER_2;
-  	this.PLAYER_1.score = 2;
-  	this.PLAYER_1.scoreLabelId = "Player-1-Score"
+  PLAYER_2.other = PLAYER_1;
+  PLAYER_2.score = 2;
+  PLAYER_2.scoreLabelId = "player-1-score"
+	PLAYER_2.isAI = false;
 
-  	this.PLAYER_2.other = this.PLAYER_1;
-  	this.PLAYER_2.score = 2;
-  	this.PLAYER_2.scoreLabelId = "Player-2-Score"
+	PLAYER_1.play = function(coordinate) {
+		if (this.isAI)
+			return that.play(ai.getMove(coordinate));
+		else
+			return that.play(coordinate);
+	};
+	PLAYER_2.play = function(coordinate) {
+		if (this.isAI)
+			return that.play(ai.getMove(coordinate));
+		else
+			return that.play(coordinate);
+	};
 
-	  // for debugging
-	  this.PLAYER_1.toString = function() {return "Player 1";};
-	  this.PLAYER_2.toString = function() {return "Player 2";};
-	  this.NONE.toString = function() {return "-";};
+  // for debugging
+  PLAYER_1.toString = function() {return "Player 1";};
+  PLAYER_2.toString = function() {return "Player 2";};
+  NONE.toString = function() {return "-";};
 
-		this.PLAYER_1.isAI = false;
-		this.PLAYER_2.isAI = false;
+  var compass = new Compass();
 
-		this.PLAYER_1.play = function(coordinate){
-			if ( this.isAI )
-				return Board.play(ai.getMove(coordinate));
-			else
-				return Board.play(coordinate);
-		};
+  var moveStack = [];
+  var redoQueue = [];
 
-		this.PLAYER_2.play = function(coordinate){
-			if ( this.isAI )
-				return Board.play(ai.getMove(coordinate));
-			else
-				return Board.play(coordinate);
-		};
+  var board = [];
+  var currentPlayerId = 0;
 
-  	this.compass = new Compass();
-  	this.moveStack = [];
-	  this.board = [];
-   	this.currentPlayerId = 0;
+  var winner;
 
-  	for (var row = 0; row < this.boardDimension; row++) {
-    	this.board.push(Array.dim(this.boardDimension, this.NONE));
-  	};
+  for (var row = 0; row < boardDimension; row++) {
+    board.push(Array.dim(boardDimension, NONE));
+  };
 
-		this.board[3][3] = this.PLAYER_1;
-		this.board[3][4] = this.PLAYER_2;
-		this.board[4][3] = this.PLAYER_2;
-		this.board[4][4] = this.PLAYER_1;
+  board[3][3] = PLAYER_1;
+  board[3][4] = PLAYER_2;
+  board[4][3] = PLAYER_2;
+  board[4][4] = PLAYER_1;
 
+	this.getDimension = function() {
+		return boardDimension;
+	};
 
-		return this;
-	},
+	var updateCurrentPlayer = function() {
+		currentPlayerId = (currentPlayerId + 1) % 2 ;
+	};
 
-	getDimension : function() {
-		return this.boardDimension;
-	},
-
-	updateCurrentPlayer : function() {
-		this.currentPlayerId = (this.currentPlayerId + 1) % 2 ;
-	},
-
-	getPlayer : function (i) {
-		var players = {0: this.PLAYER_1, 1: this.PLAYER_2};
+	this.getPlayer = function (i) {
+		var players = {0: PLAYER_1, 1: PLAYER_2};
 		return players[i];
-	},
+	};
 
-	getCurrentPlayer : function() {
-		return this.getPlayer(this.currentPlayerId);
-	},
+	this.getCurrentPlayer = function() {
+		return that.getPlayer(currentPlayerId);
+	};
 
-  updateCell : function (coordinate, player) {
-    var row = coordinate.getRow();
-    var col = coordinate.getColumn();
-    this.board[row][col] = player;
-  },
+	this.undo = function () {
+		var move = moveStack.pop();
 
-	// mutate board by playing player in position
-	// return move
-  // should only be called for VALID COORDINATE
-	play : function (newDisk) {
-
-    var player = Board.getCurrentPlayer();
-    var flips = [];
-    move = new Move(player, newDisk, this.flipGenerator);
-
-		this.moveStack.push(move);
+    if (move == undefined) {
+      return;
+    };
 
     var player = move.getPlayer();
+		redoQueue.push(move);
+
+    //remove new disk
+    updateCell(move.getNewDisk(), NONE);
+    //unflip flipped cells
+    move.getFlippedDisks().forEach(function (cell, i, cells) {
+      updateCell(cell, player.other);
+    });
+
+    //undo score update
+    player.score -= move.getDeltaScorePlayer(player);
+    player.other.score -= move.getDeltaScorePlayer(player.other);
+
+    updateCurrentPlayer();
+    return move;
+
+	};
+
+  var updateCell = function (coordinate, player) {
+    var row = coordinate.getRow();
+    var col = coordinate.getColumn();
+    board[row][col] = player;
+  };
+
+	this.redo = function  () {
+		var move = redoQueue.pop();
+		if (move == undefined) return;
+
+    moveStack.push(move);
+    var player = move.getPlayer();
+
 
     //mutate board
     move.getAllUpdatedCoordinates().forEach(function (cell, i, cells) {
-      Board.updateCell(cell, player);
-    })
+      updateCell(cell, player);
+    });
 
     //update score
     player.score += move.getDeltaScorePlayer(player);
     player.other.score += move.getDeltaScorePlayer(player.other);
 
-    this.updateCurrentPlayer();
+    updateCurrentPlayer();
+
+    return move;
+	};
+
+	// mutate board by playing player in position
+	// return move
+  // should only be called for VALID COORDINATE
+	this.play = function (newDisk) {
+		redoQueue = [];
+
+    var player = that.getCurrentPlayer();
+    var flips = [];
+    move = new Move(player, newDisk, flipGenerator);
+
+		moveStack.push(move);
+
+    var player = move.getPlayer();
+
+    //mutate board
+    move.getAllUpdatedCoordinates().forEach(function (cell, i, cells) {
+      updateCell(cell, player);
+    });
+
+    //update score
+    player.score += move.getDeltaScorePlayer(player);
+    player.other.score += move.getDeltaScorePlayer(player.other);
+
+    updateCurrentPlayer();
 		return move;
-	},
+	};
 
 	//return if play a coordinate would be valid
-	verifyMove : function (coordinate) {
-    return this.flipGenerator(coordinate).length > 0;
-	},
+	this.verifyMove = function (coordinate) {
+    return flipGenerator(coordinate).length > 0;
+	};
 
-  flipGenerator : function(coordinate) {
-    var player = Board.getCurrentPlayer();
+  var flipGenerator = function(coordinate) {
+    var player = that.getCurrentPlayer();
     var coordinates = [];
     var flips =[];
 
     //for each direction
-    Board.compass.getDirections().forEach ( function (direction, index, array) {
+    compass.getDirections().forEach ( function (direction, index, array) {
       var coordinates = [];
       //should not have a disk
-      if (Board.playerAt(coordinate) != Board.NONE) return ;
+      if (playerAt(coordinate) != NONE) return ;
       var step =  direction.step(coordinate);
-      while (direction.onBoard(Board.boardDimension, step)) {
-        if (Board.playerAt(step) == Board.NONE) {
+      while (direction.onBoard(boardDimension, step)) {
+        if (playerAt(step) == NONE) {
           return;
-        } else if (Board.playerAt(step) == player) {
+        } else if (playerAt(step) == player) {
           //disks of opposite sign inbetween disks of same sign
           if (coordinates.length > 0 ){
             step = direction.step(step);
@@ -149,28 +188,28 @@ Board = {
     });
 
     return flips;
-  },
+  };
 
-  getFlipGenerator : function () {
-    return this.flipGenerator;
-  },
+  this.getFlipGenerator = function () {
+    return flipGenerator;
+  };
 
 
-  playerAt : function (coordinate) {
-    return this.board[coordinate.getRow()][coordinate.getColumn()];
-  },
+  var playerAt = function (coordinate) {
+    return board[coordinate.getRow()][coordinate.getColumn()];
+  };
 
-	isGameOver : function() {
+	this.isGameOver = function() {
 
-		for (var row = 0; row < this.board.length; row ++) {
-			for (var col = 0; col < this.board.length; col ++) {
-				if (Board.verifyMove(new Coordinate(row, col))) {
+		for (var row = 0; row < board.length; row ++) {
+			for (var col = 0; col < board.length; col ++) {
+				if (that.verifyMove(new Coordinate(row, col))) {
 					return false;
 				}
 			}
 		}
 
-    var player  = Board.getCurrentPlayer();
+    var player  = that.getCurrentPlayer();
     var other = player.other;
     if (player.score > other.score) {
       winner = player;
@@ -181,9 +220,10 @@ Board = {
     }
 
 		return true;
-	},
+	};
 
-  getWinner : function() {
+  this.getWinner = function() {
     return winner;
-  }
+  };
+
 };

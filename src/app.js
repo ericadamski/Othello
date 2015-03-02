@@ -69,7 +69,7 @@ Game = {
   start : function() {
     Game.boardDimension = 8;
     Game.elements = [];
-    Game.board = Board.init(Game.boardDimension);
+    Game.board = new Board(Game.boardDimension);
 
     for (var row = 0; row < Game.boardDimension; row++) {
     	Game.elements.push(Array.dim(Game.boardDimension).map(function () {
@@ -79,6 +79,8 @@ Game = {
     		return box;
     	}));
     }
+
+    console.log(Game.board);
 
     Game.renderPiece(Game.board.getPlayer(0), 3, 3);
     Game.renderPiece(Game.board.getPlayer(1), 3, 4);
@@ -149,12 +151,19 @@ Game = {
 
           if ( (currentPlayer = Game.board.getCurrentPlayer()).isAI )
           {
-            var move = currentPlayer.play(Game.board);
+            console.log(Game.board);
+            console.log($.extend(true, {}, Game.board));
+            var move = currentPlayer.play($.extend(true, {}, Game.board));
 
             Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
-            Game.updateTurnLabel(currentPlayer)
+            Game.updateTurnLabel(currentPlayer);
             Game.updateScoreLabel();
             Game.updateGuessLocations();
+
+            if (Game.board.isGameOver()) {
+              Game.gameOver();
+              return;
+            }
           }
         });
       });

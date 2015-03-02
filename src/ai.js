@@ -2,8 +2,7 @@ ai = {
   boardCopy: {},
 
   updateAIBoard : function(board) {
-    this.boardCopy = {};
-    jQuery.extend(this.boardCopy, board);
+    this.boardCopy = new Board(board.getDimension());
   },
 
   getMove : function(board) {
