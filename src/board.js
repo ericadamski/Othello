@@ -3,7 +3,6 @@
 // Contains all the game logic
 //
 Board = function (boardDimension, moveStack, board, currentPlayer) {
-	console.log(board);
 	var that = this;
 
   this.PLAYER_1 = {},
@@ -63,17 +62,27 @@ Board = function (boardDimension, moveStack, board, currentPlayer) {
 
 	this.PLAYER_1.play = function(coordinate) {
 		if (this.isAI !== 0)
-			return that.play(ai.getMove(coordinate, this.isAI),
+		{
+			var aiMove = ai.getMove(coordinate,
+				this.isAI,
+				parseInt(this.limit.value));
+			return {move: that.play(aiMove.move,
 				that.getMoveStack(),
-				that.getBoard());
+				that.getBoard()), nodes: aiMove.nodes};
+		}
 		else
 			return that.play(coordinate, that.getMoveStack(), that.getBoard());
 	};
 	this.PLAYER_2.play = function(coordinate) {
 		if (this.isAI !== 0)
-			return that.play(ai.getMove(coordinate, this.isAI),
+		{
+			var aiMove = ai.getMove(coordinate,
+				this.isAI,
+				parseInt(this.limit.value));
+			return {move: that.play(aiMove.move,
 				that.getMoveStack(),
-				that.getBoard());
+				that.getBoard()), nodes: aiMove.nodes};
+		}
 		else
 			return that.play(coordinate, that.getMoveStack(), that.getBoard());
 	};

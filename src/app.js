@@ -16,9 +16,11 @@ Game = {
     //player-1-mode
     this.board.getPlayer(0).isAI =
       document.getElementById("player-1-mode").selectedIndex;
+    this.board.getPlayer(0).limit = document.getElementById("P1-limit");
     //player-2-mode
     this.board.getPlayer(1).isAI =
       document.getElementById("player-2-mode").selectedIndex;
+    this.board.getPlayer(1).limit = document.getElementById("P2-limit");
   },
 
   updateGuessLocations : function() {
@@ -56,6 +58,10 @@ Game = {
     var imageSrc = 'images/' + player.toString() + '.png';
     var image = $('<img>').attr('src', imageSrc);
     this.elements[row][col].prepend(image);
+  },
+
+  showNodeCount : function(player, count) {
+    $("#"+ player.scoreLabelId +"-Node-Count").html(count);
   },
 
   start : function() {
@@ -141,8 +147,10 @@ Game = {
 
           if ( (currentPlayer = Game.board.getCurrentPlayer()).isAI !== 0 )
           {
-            var move = currentPlayer.play(Game.board);
+            var aiMove = currentPlayer.play(Game.board);
+            var move = aiMove.move;
 
+            Game.showNodeCount(currentPlayer, aiMove.nodes);
             Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
             Game.updateTurnLabel(Game.board.getCurrentPlayer());
             Game.updateScoreLabel();
@@ -165,8 +173,11 @@ Game = {
       if ( player.other.isAI !== 0 )
       {
         var int = setInterval(function(){
-          var move = player.play(Game.board);
+          player = Game.board.getCurrentPlayer();
+          var aiMove = player.play(Game.board);
+          var move = aiMove.move;
 
+          Game.showNodeCount(player, aiMove.nodes);
           Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
           Game.updateTurnLabel(Game.board.getCurrentPlayer())
           Game.updateScoreLabel();
@@ -181,8 +192,10 @@ Game = {
       }
       else
       {
-          var move = player.play(Game.board);
+          var aiMove = player.play(Game.board);
+          var move = aiMove.move;
 
+          Game.showNodeCount(player, aiMove.nodes);
           Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
           Game.updateTurnLabel(Game.board.getCurrentPlayer())
           Game.updateScoreLabel();

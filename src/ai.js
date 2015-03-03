@@ -1,5 +1,8 @@
 ai = {
   boardCopy: {},
+  INFINITY: 1000000000000,
+  nodeCount: 0,
+  limit: this.INFINITY,
 
   updateAIBoard : function(b) {
     var sam = new Array(b.getBoard().length);
@@ -11,14 +14,19 @@ ai = {
       b.getMoveStack().slice(),
       sam,
       b.getCurrentPlayer().toString() === "Player 1" ? 0 : 1);
+
+    ai.nodeCount = 0;
   },
 
-  getMove : function(b, heuristicChoice) {
+  getMove : function(b, heuristicChoice, limit) {
+    this.limit = undefined;
+    this.limit = limit;
+    //console.log("Limiting Search By : " + this.limit);
     this.updateAIBoard(b);
     var heuristic = heuristicChoice === 1 ?
       this.maxScoreHeuristic :
       this.coinParityHeuristic;
-    return this.minmax(heuristic);
+    return {move: this.minmax(heuristic), nodes: ai.nodeCount};
   },
 
   maxScoreHeuristic : function(min, max) {
@@ -48,7 +56,7 @@ ai = {
     return 100 * ( maxCoin - minCoin ) / (maxCoin + minCoin );
   },
 
-  maximize : function(game, move, heuristic) {
+  maximize : function(game, move, alpha, beta, heuristic) {
     game.play(move, game.getMoveStack(), game.getBoard());
 
     if (game.isGameOver(game.getBoard(), false))
@@ -57,17 +65,24 @@ ai = {
       return heuristic(player.other, player);
     }
 
-    var value = -10000;
-
     this.getMoves(game,
       game.getCurrentPlayer()).forEach( function(move, index, moves) {
-        value = Math.max(value, ai.minimize(game, move, heuristic));
+        if( ai.nodeCount < ai.limit )
+        {
+          ai.nodeCount++;
+          alpha = Math.max(alpha, ai.minimize(game,
+            move,
+            alpha,
+            beta,
+            heuristic));
+          if ( alpha >= beta ) return alpha;
+        }
     });
 
-    return value;
+    return alpha;
   },
 
-  minimize : function(game, move, heuristic) {
+  minimize : function(game, move, alpha, beta, heuristic) {
     game.play(move, game.getMoveStack(), game.getBoard());
 
     if (game.isGameOver(game.getBoard(), false))
@@ -76,33 +91,53 @@ ai = {
       return heuristic(player.other, player);
     }
 
-    var value = 10000;
-
     this.getMoves(game,
       game.getCurrentPlayer()).forEach( function(move, index, moves) {
-        value = Math.min(value, ai.maximize(game, move, heuristic));
+        if( ai.nodeCount < ai.limit )
+        {
+          ai.nodeCount++;
+          beta = Math.min(beta, ai.maximize(game,
+            move,
+            alpha,
+            beta,
+            heuristic));
+          if ( beta <= alpha ) return beta;
+        }
     });
 
-    return value;
+    return beta;
   },
 
   minmax : function(heuristic) {
     var max = this.boardCopy.getCurrentPlayer();
 
+    if (this.limit === undefined)
+      this.limit = this.INFINITY;
+
+    if (this.limit < 1)
+      this.limit = 1;
+
+    alpha = -this.INFINITY;
+    beta = this.INFINITY;
+
     var best = null;
-    var value = -100000;
+    var value = -this.INFINITY;
 
     this.getMoves(this.boardCopy, max).forEach( function(move, index, moves) {
-      var tmpValue = ai.minimize(ai.boardCopy, move, heuristic);
-      console.log(tmpValue);
-      if (tmpValue > value)
+      if ( ai.nodeCount < ai.limit )
       {
-        best = new Move(ai.boardCopy.getCurrentPlayer(),
-          move,
-          ai.boardCopy.getFlipGenerator(),
-          ai.boardCopy.getBoard());
-        value = tmpValue;
+        var tmpValue = ai.minimize(ai.boardCopy, move, alpha, beta, heuristic);
+        if (tmpValue > value)
+        {
+          best = new Move(ai.boardCopy.getCurrentPlayer(),
+            move,
+            ai.boardCopy.getFlipGenerator(),
+            ai.boardCopy.getBoard());
+          value = tmpValue;
+        }
       }
+      else
+        return best.getNewDisk();;
     });
 
     return best.getNewDisk();
