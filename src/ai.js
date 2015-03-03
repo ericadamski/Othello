@@ -1,81 +1,106 @@
 ai = {
   boardCopy: {},
 
-  updateAIBoard : function(board) {
-    this.boardCopy = new Board(board.getDimension());
+  updateAIBoard : function(b) {
+    var sam = new Array(b.getBoard().length);
+    var ba = b.getBoard();
+    for ( var i = 0; i < sam.length; i++ )
+      sam[i] = ba[i].slice();
+
+    this.boardCopy = new Board(b.getDimension(),
+      b.getMoveStack().slice(),
+      sam,
+      b.getCurrentPlayer().toString() === "Player 1" ? 0 : 1);
   },
 
-  getMove : function(board) {
-    this.updateAIBoard(board);
-    return this.minmax();
+  getMove : function(b, heuristicChoice) {
+    this.updateAIBoard(b);
+    var heuristic = heuristicChoice === 1 ?
+      this.maxScoreHeuristic :
+      this.coinParityHeuristic;
+    return this.minmax(heuristic);
   },
 
-  cornersHeuristic : function(min, max) {
-    //Sudo
-    /*if ( Max Player Corners + Min Player Corners != 0)
-        Corner Heuristic Value =
-        	100 * (Max Player Corners - Min Player Corners) / (Max Player Corners + Min Player Corners)
-      else
-          Corner Heuristic Value = 0*/
+  maxScoreHeuristic : function(min, max) {
+    return max.score;
   },
 
-  mobilityHeuristic : function(min, max) {
-    //Sudo
-    /*if ( Max Player Moves + Min Player Moves != 0)
-	     Mobility Heuristic Value =
-		     100 * (Max Player Moves - Min Player Moves) / (Max Player Moves + Min Player Moves)
-      else
-	     Mobility Heuristic Value = 0*/
+  coinParityHeuristic : function(min, max) {
+    var game = ai.boardCopy;
+    var board = game.getBoard();
+
+    var maxCoin = 0,
+        minCoin = 0;
+
+    for ( var row = 0; row < game.getDimension(); row++ )
+    {
+      for ( var col = 0; col < game.getDimension(); col++ )
+      {
+        if ( board[row][col].toString() !== game.NONE.toString() )
+        {
+          board[row][col].toString() === max.toString() ?
+            ++maxCoin :
+            ++minCoin
+        }
+      }
+    }
+
+    return 100 * ( maxCoin - minCoin ) / (maxCoin + minCoin );
   },
 
-  maximize : function(game, move) {
-    game.play(move);
+  maximize : function(game, move, heuristic) {
+    game.play(move, game.getMoveStack(), game.getBoard());
 
-    if (game.isGameOver())
-      return new Move(game.getCurrentPlayer(),
-        move,
-        game.getFlipGenerator()).getDeltaScorePlayer(game.getWinner());
+    if (game.isGameOver(game.getBoard(), false))
+    {
+      var player = game.getCurrentPlayer();
+      return heuristic(player.other, player);
+    }
 
     var value = -10000;
 
-    this.getMoves(game).forEach( function(move, index, moves) {
-      value = Math.max(value, ai.minimize(game, move));
+    this.getMoves(game,
+      game.getCurrentPlayer()).forEach( function(move, index, moves) {
+        value = Math.max(value, ai.minimize(game, move, heuristic));
     });
 
     return value;
   },
 
-  minimize : function(game, move) {
-    game.play(move);
+  minimize : function(game, move, heuristic) {
+    game.play(move, game.getMoveStack(), game.getBoard());
 
-    if (game.isGameOver())
-      return new Move(game.getCurrentPlayer(),
-        move,
-        game.getFlipGenerator()).getDeltaScorePlayer(game.getWinner());
+    if (game.isGameOver(game.getBoard(), false))
+    {
+      var player = game.getCurrentPlayer();
+      return heuristic(player.other, player);
+    }
 
     var value = 10000;
 
-    this.getMoves(game).forEach( function(move, index, moves) {
-      value = Math.min(value, ai.maximize(game, move));
+    this.getMoves(game,
+      game.getCurrentPlayer()).forEach( function(move, index, moves) {
+        value = Math.min(value, ai.maximize(game, move, heuristic));
     });
 
     return value;
   },
 
-  minmax : function() {
+  minmax : function(heuristic) {
     var max = this.boardCopy.getCurrentPlayer();
 
     var best = null;
     var value = -100000;
 
-    this.getMoves(this.boardCopy).forEach( function(move, index, moves) {
-      var tmpValue = ai.minimize(ai.boardCopy, move);
+    this.getMoves(this.boardCopy, max).forEach( function(move, index, moves) {
+      var tmpValue = ai.minimize(ai.boardCopy, move, heuristic);
       console.log(tmpValue);
       if (tmpValue > value)
       {
         best = new Move(ai.boardCopy.getCurrentPlayer(),
           move,
-          ai.boardCopy.getFlipGenerator());
+          ai.boardCopy.getFlipGenerator(),
+          ai.boardCopy.getBoard());
         value = tmpValue;
       }
     });
@@ -83,13 +108,13 @@ ai = {
     return best.getNewDisk();
   },
 
-  getMoves : function (game) {
+  getMoves : function (game, player) {
     var moves = [];
 
-    for (var row = 0; row < this.boardCopy.getDimension(); row ++) {
-      for (var col = 0; col < this.boardCopy.getDimension(); col ++) {
+    for (var row = 0; row < game.getDimension(); row ++) {
+      for (var col = 0; col < game.getDimension(); col ++) {
         var newDisk = new Coordinate(row, col);
-        if (game.verifyMove(newDisk)) {
+        if (game.verifyMove(newDisk, player, game.getBoard())) {
           moves.push(newDisk);
         }
       }

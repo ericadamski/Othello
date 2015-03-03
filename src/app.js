@@ -14,25 +14,17 @@ Game = {
 
   getGameMode : function() {
     //player-1-mode
-    var p1Index = document.getElementById("player-1-mode").selectedIndex;
+    this.board.getPlayer(0).isAI =
+      document.getElementById("player-1-mode").selectedIndex;
     //player-2-mode
-    var p2Index = document.getElementById("player-2-mode").selectedIndex;
-
-    if ( p1Index === 0 )
-      console.log("Human");
-    else
-      this.board.getPlayer(0).isAI = true;
-
-    if ( p2Index === 0 )
-      console.log("Human");
-    else
-      this.board.getPlayer(1).isAI = true;
+    this.board.getPlayer(1).isAI =
+      document.getElementById("player-2-mode").selectedIndex;
   },
 
   updateGuessLocations : function() {
   	Game.elements.forEach(function(cells, row) {
   		cells.forEach(function(cell, col) {
- 				if (Game.board.verifyMove(new Coordinate(row, col)))
+ 				if (Game.board.verifyMove(new Coordinate(row, col), Game.board.getBoard()))
  					cell.renderGuess(true);
  				else
 		 		  cell.renderGuess(false);
@@ -79,8 +71,6 @@ Game = {
     		return box;
     	}));
     }
-
-    console.log(Game.board);
 
     Game.renderPiece(Game.board.getPlayer(0), 3, 3);
     Game.renderPiece(Game.board.getPlayer(1), 3, 4);
@@ -139,28 +129,26 @@ Game = {
             var move = currentPlayer.play(coordinate);
 
             Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
-            Game.updateTurnLabel(currentPlayer);
+            Game.updateTurnLabel(Game.board.getCurrentPlayer());
             Game.updateScoreLabel();
             Game.updateGuessLocations();
 
-            if (Game.board.isGameOver()) {
+            if (Game.board.isGameOver(Game.board.getBoard(), true)) {
               Game.gameOver();
               return;
             }
           }
 
-          if ( (currentPlayer = Game.board.getCurrentPlayer()).isAI )
+          if ( (currentPlayer = Game.board.getCurrentPlayer()).isAI !== 0 )
           {
-            console.log(Game.board);
-            console.log($.extend(true, {}, Game.board));
-            var move = currentPlayer.play($.extend(true, {}, Game.board));
+            var move = currentPlayer.play(Game.board);
 
             Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
-            Game.updateTurnLabel(currentPlayer);
+            Game.updateTurnLabel(Game.board.getCurrentPlayer());
             Game.updateScoreLabel();
             Game.updateGuessLocations();
 
-            if (Game.board.isGameOver()) {
+            if (Game.board.isGameOver(Game.board.getBoard())) {
               Game.gameOver();
               return;
             }
@@ -172,14 +160,34 @@ Game = {
 
     var player;
 
-    if ( (player = Game.board.getCurrentPlayer()).isAI )
+    if ( (player = Game.board.getCurrentPlayer()).isAI !== 0 )
     {
-      var move = player.play(Game.board);
+      if ( player.other.isAI !== 0 )
+      {
+        var int = setInterval(function(){
+          var move = player.play(Game.board);
 
-      Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
-      Game.updateTurnLabel(currentPlayer)
-      Game.updateScoreLabel();
-      Game.updateGuessLocations();
+          Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
+          Game.updateTurnLabel(Game.board.getCurrentPlayer())
+          Game.updateScoreLabel();
+          Game.updateGuessLocations();
+
+          if (Game.board.isGameOver(Game.board.getBoard())) {
+            Game.gameOver();
+            clearInterval(int);
+            return;
+          }
+        }, 1000);
+      }
+      else
+      {
+          var move = player.play(Game.board);
+
+          Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
+          Game.updateTurnLabel(Game.board.getCurrentPlayer())
+          Game.updateScoreLabel();
+          Game.updateGuessLocations();
+      }
     }
   },
 

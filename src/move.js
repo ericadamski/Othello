@@ -1,15 +1,15 @@
 //flips list of flip
 //size of flip
 //only nonEmpty moves are made
-var Move = function (player, newDisk, flipGenerator) {
+var Move = function (player, newDisk, flipGenerator, board) {
   var that = this;
   var player = player;
-  var flips = flipGenerator(newDisk);
+  var flips = flipGenerator(newDisk, board);
   var deltaScore = {};
   var flippedDisks = [];
   var newDisk = newDisk;
 
-  flips = flipGenerator(newDisk);
+  flips = flipGenerator(newDisk, board);
 
   flips.forEach(function (flip, index, flips) {
     flip.getFlippedDisks().forEach(function (cell, i, line) {
