@@ -111,7 +111,7 @@ ai = {
   minmax : function(heuristic) {
     var max = this.boardCopy.getCurrentPlayer();
 
-    if (this.limit === undefined)
+    if (this.limit === undefined || isNaN(this.limit))
       this.limit = this.INFINITY;
 
     if (this.limit < 1)
