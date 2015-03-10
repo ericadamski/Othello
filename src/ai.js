@@ -3,6 +3,7 @@ ai = {
   INFINITY: 1000000000000,
   nodeCount: 0,
   limit: this.INFINITY,
+  depth: 8,
 
   updateAIBoard : function(b) {
     this.boardCopy =  this.copyBoard(b);
@@ -65,7 +66,7 @@ ai = {
     return 100 * ( maxCoin - minCoin ) / (maxCoin + minCoin );
   },
 
-  maximize : function(game, move, alpha, beta, heuristic, depth) {
+  maximize : function(game, move, alpha, beta, heuristic, dep) {
     game.play(move,
       game.getMoveStack(),
       game.getBoard(),
@@ -77,27 +78,29 @@ ai = {
       return heuristic(player.other, player);
     }
 
-    if (depth++ < ai.depth)
-    {
-      this.getMoves(game,
-        game.getCurrentPlayer()).forEach( function(move, index, moves) {
-          if( ai.nodeCount < ai.limit )
-          {
-            ai.nodeCount++;
-            alpha = Math.max(alpha, ai.minimize(game,
-              move.getNewDisk(),
-              alpha,
-              beta,
-              heuristic));
-            if ( alpha >= beta ) return alpha;
-          }
-      });
-    }
+    if( dep > this.depth ) return alpha
+
+    ++dep;
+
+    this.getMoves(game,
+      game.getCurrentPlayer()).forEach( function(move, index, moves) {
+        if( ai.nodeCount < ai.limit )
+        {
+          ai.nodeCount++;
+          alpha = Math.max(alpha, ai.minimize(game,
+            move.getNewDisk(),
+            alpha,
+            beta,
+            heuristic,
+            dep));
+          if ( alpha >= beta ) return alpha;
+        }
+    });
 
     return alpha;
   },
 
-  minimize : function(game, move, alpha, beta, heuristic, depth) {
+  minimize : function(game, move, alpha, beta, heuristic, dep) {
     game.play(move,
       game.getMoveStack(),
       game.getBoard(),
@@ -109,22 +112,24 @@ ai = {
       return heuristic(player.other, player);
     }
 
-    if (depth++ < ai.depth)
-    {
-      this.getMoves(game,
-        game.getCurrentPlayer()).forEach( function(move, index, moves) {
-          if( ai.nodeCount < ai.limit )
-          {
-            ai.nodeCount++;
-            beta = Math.min(beta, ai.maximize(game,
-              move.getNewDisk(),
-              alpha,
-              beta,
-              heuristic));
-            if ( beta <= alpha ) return beta;
-          }
-      });
-    }
+    if( dep > this.depth ) return beta;
+
+    ++dep;
+
+    this.getMoves(game,
+      game.getCurrentPlayer()).forEach( function(move, index, moves) {
+        if( ai.nodeCount < ai.limit )
+        {
+          ai.nodeCount++;
+          beta = Math.min(beta, ai.maximize(game,
+            move.getNewDisk(),
+            alpha,
+            beta,
+            heuristic,
+            dep));
+          if ( beta <= alpha ) return beta;
+        }
+    });
 
     return beta;
   },
@@ -151,7 +156,12 @@ ai = {
       var m = move;
       if ( ai.nodeCount < ai.limit )
       {
-        var tmpValue = ai.minimize(bc, m.getNewDisk(), alpha, beta, heuristic);
+        var tmpValue = ai.minimize(bc,
+          m.getNewDisk(),
+          alpha,
+          beta,
+          heuristic,
+          0);
         if (tmpValue > value)
         {
           best = m

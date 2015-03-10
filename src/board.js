@@ -101,8 +101,6 @@ Board = function (boardDimension, moveStack, board, currentPlayer) {
 	};
 
   var playerAt = function (coordinate, b) {
-		if( coordinate.getRow() == 1 && coordinate.getColumn() == 4 )
-			console.log(b[coordinate.getRow()][coordinate.getColumn()]);
     return b[coordinate.getRow()][coordinate.getColumn()];
   };
 
