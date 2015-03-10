@@ -5,17 +5,20 @@ ai = {
   limit: this.INFINITY,
 
   updateAIBoard : function(b) {
+    this.boardCopy =  this.copyBoard(b);
+    ai.nodeCount = 0;
+  },
+
+  copyBoard : function(b) {
     var sam = new Array(b.getBoard().length);
     var ba = b.getBoard();
     for ( var i = 0; i < sam.length; i++ )
       sam[i] = ba[i].slice();
 
-    this.boardCopy = new Board(b.getDimension(),
+    return new Board(b.getDimension(),
       b.getMoveStack().slice(),
       sam,
       b.getCurrentPlayer().toString() === "Player 1" ? 0 : 1);
-
-    ai.nodeCount = 0;
   },
 
   getMove : function(b, heuristicChoice, limit) {
@@ -123,14 +126,18 @@ ai = {
     var best = null;
     var value = -this.INFINITY;
 
+    var bc = null;
+
     this.getMoves(this.boardCopy, max).forEach( function(move, index, moves) {
+      bc = ai.copyBoard(ai.boardCopy);
+      var m = move;
       if ( ai.nodeCount < ai.limit )
       {
-        var tmpValue = ai.minimize(ai.boardCopy, move, alpha, beta, heuristic);
+        var tmpValue = ai.minimize(bc, m, alpha, beta, heuristic);
         if (tmpValue > value)
         {
           best = new Move(ai.boardCopy.getCurrentPlayer(),
-            move,
+            m,
             ai.boardCopy.getFlipGenerator(),
             ai.boardCopy.getBoard());
           value = tmpValue;
@@ -145,16 +152,18 @@ ai = {
 
   getMoves : function (game, player) {
     var moves = [];
+    var count = 0;
+    setInterval(console.log(game), 2200000000000);
 
     for (var row = 0; row < game.getDimension(); row ++) {
       for (var col = 0; col < game.getDimension(); col ++) {
         var newDisk = new Coordinate(row, col);
-        if (game.verifyMove(newDisk, player, game.getBoard())) {
+        if (game.isMove(newDisk)) {
+          console.log(count++);
           moves.push(newDisk);
         }
       }
     }
-
     return moves;
   }
 }

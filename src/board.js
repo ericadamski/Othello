@@ -195,12 +195,33 @@ Board.prototype.play = function (newDisk, moveStack, b) {
 	player.lastMove = move;
 
   this.updateCurrentPlayer();
+	this.updateGuessLocations(this.board, this.getCurrentPlayer());
 	return move;
 };
 
 //return if play a coordinate would be valid
 Board.prototype.verifyMove = function (coordinate, player, b) {
   return this.getFlipGenerator()(coordinate, player, b).length > 0;
+};
+
+Board.prototype.updateGuessLocations = function (b, player) {
+	var that = this;
+	b.forEach(function(cells, row){
+		cells.forEach(function(cell, col){
+			console.log(cell);
+			if( that.verifyMove(new Coordinate(row, col),
+				player,
+				b ) )
+				cell.isValid = true;
+			else
+				cell.isValid = false;
+		});
+	});
+};
+
+Board.prototype.isMove = function (coordinate) {
+	console.log(this.board);
+	return this.board[coordinate.getRow()][coordinate.getColumn()].isValid;
 };
 
 Board.prototype.isGameOver = function(b) {

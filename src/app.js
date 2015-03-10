@@ -147,19 +147,21 @@ Game = {
 
           if ( (currentPlayer = Game.board.getCurrentPlayer()).isAI !== 0 )
           {
-            var aiMove = currentPlayer.play(Game.board);
-            var move = aiMove.move;
+            setInterval(function(){
+              var aiMove = currentPlayer.play(Game.board);
+              var move = aiMove.move;
 
-            Game.showNodeCount(currentPlayer, aiMove.nodes);
-            Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
-            Game.updateTurnLabel(Game.board.getCurrentPlayer());
-            Game.updateScoreLabel();
-            Game.updateGuessLocations();
+              Game.showNodeCount(currentPlayer, aiMove.nodes);
+              Game.renderLine(move.getAllUpdatedCoordinates(), move.getPlayer());
+              Game.updateTurnLabel(Game.board.getCurrentPlayer());
+              Game.updateScoreLabel();
+              Game.updateGuessLocations();
 
-            if (Game.board.isGameOver(Game.board.getBoard())) {
-              Game.gameOver();
-              return;
-            }
+              if (Game.board.isGameOver(Game.board.getBoard())) {
+                Game.gameOver();
+                return;
+              }
+            }, 2500);
           }
         });
       });
@@ -188,7 +190,7 @@ Game = {
             clearInterval(int);
             return;
           }
-        }, 1000);
+        }, 2500);
       }
       else
       {
