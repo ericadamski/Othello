@@ -26,6 +26,8 @@ Board = function (boardDimension, moveStack, board, currentPlayer) {
 
   this.compass = new Compass();
 
+	this.boardDimension = boardDimension;
+
   if (moveStack !== undefined)
 	{
 		this.moveStack = [];
@@ -40,25 +42,24 @@ Board = function (boardDimension, moveStack, board, currentPlayer) {
 		this.board = board;
 	}
 	else
+	{
   	this.board = [];
+		for (var row = 0; row < this.boardDimension; row++) {
+	    this.board.push(Array.dim(this.boardDimension, this.NONE));
+	  };
+
+	  this.board[3][3] = this.PLAYER_1;
+	  this.board[3][4] = this.PLAYER_2;
+	  this.board[4][3] = this.PLAYER_2;
+	  this.board[4][4] = this.PLAYER_1;
+	}
 
 	if (currentPlayer !== undefined)
 		this.currentPlayerId = currentPlayer;
 	else
   	this.currentPlayerId = 0;
 
-	this.boardDimension = boardDimension;
-
   this.winner;
-
-  for (var row = 0; row < this.boardDimension; row++) {
-    this.board.push(Array.dim(this.boardDimension, this.NONE));
-  };
-
-  this.board[3][3] = this.PLAYER_1;
-  this.board[3][4] = this.PLAYER_2;
-  this.board[4][3] = this.PLAYER_2;
-  this.board[4][4] = this.PLAYER_1;
 
 	this.PLAYER_1.play = function(coordinate) {
 		if (this.isAI !== 0)
@@ -68,10 +69,14 @@ Board = function (boardDimension, moveStack, board, currentPlayer) {
 				parseInt(this.limit.value));
 			return {move: that.play(aiMove.move,
 				that.getMoveStack(),
-				that.getBoard()), nodes: aiMove.nodes};
+				that.getBoard(),
+				that.getCurrentPlayer()), nodes: aiMove.nodes};
 		}
 		else
-			return that.play(coordinate, that.getMoveStack(), that.getBoard());
+			return that.play(coordinate,
+				that.getMoveStack(),
+				that.getBoard(),
+				that.getCurrentPlayer());
 	};
 	this.PLAYER_2.play = function(coordinate) {
 		if (this.isAI !== 0)
@@ -81,10 +86,14 @@ Board = function (boardDimension, moveStack, board, currentPlayer) {
 				parseInt(this.limit.value));
 			return {move: that.play(aiMove.move,
 				that.getMoveStack(),
-				that.getBoard()), nodes: aiMove.nodes};
+				that.getBoard(),
+				that.getCurrentPlayer()), nodes: aiMove.nodes};
 		}
 		else
-			return that.play(coordinate, that.getMoveStack(), that.getBoard());
+			return that.play(coordinate,
+				that.getMoveStack(),
+				that.getBoard(),
+				that.getCurrentPlayer());
 	};
 
 	this.updateCurrentPlayer = function() {
@@ -92,6 +101,8 @@ Board = function (boardDimension, moveStack, board, currentPlayer) {
 	};
 
   var playerAt = function (coordinate, b) {
+		if( coordinate.getRow() == 1 && coordinate.getColumn() == 4 )
+			console.log(b[coordinate.getRow()][coordinate.getColumn()]);
     return b[coordinate.getRow()][coordinate.getColumn()];
   };
 
@@ -146,6 +157,8 @@ Board = function (boardDimension, moveStack, board, currentPlayer) {
 	this.getFlipGenerator = function () {
 	  return flipGenerator;
 	};
+
+	this.updateGuessLocations(this.board, this.currentPlayer);
 };
 
 Board.prototype.getBoard = function() {
@@ -172,8 +185,7 @@ Board.prototype.getCurrentPlayer = function() {
 // mutate board by playing player in position
 // return move
 // should only be called for VALID COORDINATE
-Board.prototype.play = function (newDisk, moveStack, b) {
-  var player = this.getCurrentPlayer();
+Board.prototype.play = function (newDisk, moveStack, b, player) {
   var flips = [];
   move = new Move(player, newDisk, this.getFlipGenerator(), b);
 
@@ -208,7 +220,6 @@ Board.prototype.updateGuessLocations = function (b, player) {
 	var that = this;
 	b.forEach(function(cells, row){
 		cells.forEach(function(cell, col){
-			console.log(cell);
 			if( that.verifyMove(new Coordinate(row, col),
 				player,
 				b ) )
@@ -219,9 +230,8 @@ Board.prototype.updateGuessLocations = function (b, player) {
 	});
 };
 
-Board.prototype.isMove = function (coordinate) {
-	console.log(this.board);
-	return this.board[coordinate.getRow()][coordinate.getColumn()].isValid;
+Board.prototype.isMove = function (coordinate, b) {
+	return b[coordinate.getRow()][coordinate.getColumn()].isValid;
 };
 
 Board.prototype.isGameOver = function(b) {
